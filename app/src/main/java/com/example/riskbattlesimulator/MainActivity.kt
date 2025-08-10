@@ -5,18 +5,39 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.riskbattlesimulator.ui.BattleResult
+import com.example.riskbattlesimulator.ui.BattleRound
 import com.example.riskbattlesimulator.ui.theme.RiskBattleSimulatorTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,8 +58,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun RiskSimulatorScreen() {
-    var attackerTroops by remember { mutableStateOf("") }
-    var defenderTroops by remember { mutableStateOf("") }
+    var attackerTroops by remember { mutableStateOf("10") } // Valor por defecto para pruebas
+    var defenderTroops by remember { mutableStateOf("6") } // Valor por defecto para pruebas
     var stopAtTroops by remember { mutableStateOf("1") }
 
     var result by remember { mutableStateOf<BattleResult?>(null) }
@@ -123,14 +144,17 @@ fun BattleResultView(result: BattleResult) {
     ) {
         Text("Resultado final:", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Atacante: ${result.remainingAttacker} tropas",
-            style = MaterialTheme.typography.bodyLarge)
-        Text("Defensor: ${result.remainingDefender} tropas",
-            style = MaterialTheme.typography.bodyLarge)
+        Text(
+            "Atacante: ${result.remainingAttacker} tropas",
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            "Defensor: ${result.remainingDefender} tropas",
+            style = MaterialTheme.typography.bodyLarge
+        )
         Spacer(modifier = Modifier.height(24.dp))
         Text("Detalle por rondas:", style = MaterialTheme.typography.titleMedium)
 
-        // Contenedor desplazable con peso (weight) para ocupar espacio disponible
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -140,10 +164,7 @@ fun BattleResultView(result: BattleResult) {
             result.rounds.forEachIndexed { index, round ->
                 BattleRoundCard(
                     roundNumber = index + 1,
-                    attackerDice = round.attackerDice,
-                    defenderDice = round.defenderDice,
-                    attackerLosses = round.attackerLosses,
-                    defenderLosses = round.defenderLosses
+                    round = round
                 )
             }
         }
@@ -153,10 +174,7 @@ fun BattleResultView(result: BattleResult) {
 @Composable
 fun BattleRoundCard(
     roundNumber: Int,
-    attackerDice: List<Int>,
-    defenderDice: List<Int>,
-    attackerLosses: Int,
-    defenderLosses: Int
+    round: BattleRound
 ) {
     Card(
         modifier = Modifier
@@ -167,28 +185,30 @@ fun BattleRoundCard(
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Ronda $roundNumber",
+            Text(
+                "Ronda $roundNumber",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary)
+                color = MaterialTheme.colorScheme.primary
+            )
             Spacer(modifier = Modifier.height(12.dp))
 
             // Dados atacante
             DiceRow(
                 label = "Atacante",
-                dice = attackerDice,
-                losses = attackerLosses,
+                dice = round.attackerDice,
+                outcomes = round.attackerOutcomes,
                 maxDice = 3,
-                color = Color(0xFFD32F2F) // Rojo
+                baseColor = Color(0xFFD32F2F) // Rojo
             )
             Spacer(modifier = Modifier.height(8.dp))
 
             // Dados defensor
             DiceRow(
                 label = "Defensor",
-                dice = defenderDice,
-                losses = defenderLosses,
+                dice = round.defenderDice,
+                outcomes = round.defenderOutcomes,
                 maxDice = 2,
-                color = Color(0xFF1976D2) // Azul
+                baseColor = Color(0xFF1976D2) // Azul
             )
         }
     }
@@ -198,21 +218,23 @@ fun BattleRoundCard(
 fun DiceRow(
     label: String,
     dice: List<Int>,
-    losses: Int,
+    outcomes: List<Boolean>,
     maxDice: Int,
-    color: Color
+    baseColor: Color
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("$label:",
+        Text(
+            "$label:",
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.width(80.dp))
+            modifier = Modifier.width(80.dp)
+        )
         Row {
-            dice.sortedDescending().forEachIndexed { index, value ->
-                val isWinner = index >= losses
+            dice.forEachIndexed { index, value ->
+                val outcome = outcomes.getOrNull(index)
                 DiceIcon(
                     value = value,
-                    color = color,
-                    isWinner = isWinner
+                    color = baseColor,
+                    outcome = outcome
                 )
             }
             // Rellenar espacios vacíos
@@ -224,26 +246,31 @@ fun DiceRow(
 }
 
 @Composable
-fun DiceIcon(value: Int, color: Color, isWinner: Boolean) {
-    val diceColor = if (isWinner) Color(0xFF388E3C) else color // Verde si gana, color original si pierde
+fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
+    val displayColor = when (outcome) {
+        true -> Color(0xFFD32F2F) // Rojo: perdió
+        false -> Color(0xFF388E3C) // Verde: ganó
+        null -> color.copy(alpha = 0.5f) // Color base con transparencia: no participó
+    }
+
     Box(
         modifier = Modifier
             .size(40.dp)
             .padding(4.dp)
             .background(
-                diceColor.copy(alpha = 0.1f),
+                displayColor.copy(alpha = 0.1f),
                 MaterialTheme.shapes.medium
             )
             .border(
                 width = 1.dp,
-                color = diceColor,
+                color = displayColor,
                 shape = MaterialTheme.shapes.medium
             ),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = value.toString(),
-            color = diceColor,
+            color = displayColor,
             style = MaterialTheme.typography.titleLarge
         )
     }

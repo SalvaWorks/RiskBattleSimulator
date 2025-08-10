@@ -9,6 +9,8 @@ data class BattleResult(
 data class BattleRound(
     val attackerDice: List<Int>,
     val defenderDice: List<Int>,
+    val attackerOutcomes: List<Boolean>, // true = ganó, false = perdió/no participó
+    val defenderOutcomes: List<Boolean>, // true = ganó, false = perdió/no participó
     val attackerLosses: Int,
     val defenderLosses: Int
 )
