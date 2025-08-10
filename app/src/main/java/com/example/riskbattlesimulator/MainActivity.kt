@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.riskbattlesimulator.ui.theme.BattleResult
+import com.example.riskbattlesimulator.ui.BattleResult
 import com.example.riskbattlesimulator.ui.theme.RiskBattleSimulatorTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +39,7 @@ class MainActivity : ComponentActivity() {
 fun RiskSimulatorScreen() {
     var attackerTroops by remember { mutableStateOf("") }
     var defenderTroops by remember { mutableStateOf("") }
-    var stopAtTroops by remember { mutableStateOf("1") }  // Valor por defecto 1
+    var stopAtTroops by remember { mutableStateOf("1") }
 
     var result by remember { mutableStateOf<BattleResult?>(null) }
 
@@ -49,16 +51,13 @@ fun RiskSimulatorScreen() {
         verticalArrangement = Arrangement.Center
     ) {
         Text("Risk Battle Simulator", style = MaterialTheme.typography.headlineMedium)
-
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Inputs
         NumberInputField(
             value = attackerTroops,
             onValueChange = { attackerTroops = it },
             label = "Tropas atacantes"
         )
-
         Spacer(modifier = Modifier.height(8.dp))
 
         NumberInputField(
@@ -66,7 +65,6 @@ fun RiskSimulatorScreen() {
             onValueChange = { defenderTroops = it },
             label = "Tropas defensoras"
         )
-
         Spacer(modifier = Modifier.height(8.dp))
 
         NumberInputField(
@@ -74,7 +72,6 @@ fun RiskSimulatorScreen() {
             onValueChange = { stopAtTroops = it },
             label = "Plantar al llegar a"
         )
-
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(
@@ -94,7 +91,6 @@ fun RiskSimulatorScreen() {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Resultados
         result?.let { battleResult ->
             BattleResultView(battleResult)
         }
@@ -126,36 +122,41 @@ fun BattleResultView(result: BattleResult) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Resultado final:", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Tropas restantes
+        Spacer(modifier = Modifier.height(8.dp))
         Text("Atacante: ${result.remainingAttacker} tropas",
             style = MaterialTheme.typography.bodyLarge)
         Text("Defensor: ${result.remainingDefender} tropas",
             style = MaterialTheme.typography.bodyLarge)
-
         Spacer(modifier = Modifier.height(24.dp))
-
-        // Dados agrupados por ronda
-        val attackerGroups = result.attackerDice.chunked(3)
-        val defenderGroups = result.defenderDice.chunked(2)
-        val maxRounds = maxOf(attackerGroups.size, defenderGroups.size)
-
         Text("Detalle por rondas:", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(8.dp))
 
-        for (round in 0 until maxRounds) {
-            BattleRoundCard(
-                roundNumber = round + 1,
-                attackerDice = if (round < attackerGroups.size) attackerGroups[round] else emptyList(),
-                defenderDice = if (round < defenderGroups.size) defenderGroups[round] else emptyList()
-            )
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .heightIn(max = 400.dp)
+                .padding(vertical = 8.dp)
+        ) {
+            result.rounds.forEachIndexed { index, round ->
+                BattleRoundCard(
+                    roundNumber = index + 1,
+                    attackerDice = round.attackerDice,
+                    defenderDice = round.defenderDice,
+                    attackerLosses = round.attackerLosses,
+                    defenderLosses = round.defenderLosses
+                )
+            }
         }
     }
 }
 
 @Composable
-fun BattleRoundCard(roundNumber: Int, attackerDice: List<Int>, defenderDice: List<Int>) {
+fun BattleRoundCard(
+    roundNumber: Int,
+    attackerDice: List<Int>,
+    defenderDice: List<Int>,
+    attackerLosses: Int,
+    defenderLosses: Int
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth(0.9f)
@@ -168,67 +169,80 @@ fun BattleRoundCard(roundNumber: Int, attackerDice: List<Int>, defenderDice: Lis
             Text("Ronda $roundNumber",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary)
-
             Spacer(modifier = Modifier.height(12.dp))
 
             // Dados atacante
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 8.dp)
-            ) {
-                Text("Atacante:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.width(80.dp))
-                Row {
-                    attackerDice.forEach { dice ->
-                        DiceIcon(value = dice, color = Color(0xFFD32F2F)) // Rojo
-                    }
-                    // Rellenar espacios si hay menos de 3 dados
-                    for (i in attackerDice.size until 3) {
-                        EmptyDiceIcon()
-                    }
-                }
-            }
+            DiceRow(
+                label = "Atacante",
+                dice = attackerDice,
+                losses = attackerLosses,
+                maxDice = 3,
+                color = Color(0xFFD32F2F) // Rojo
+            )
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Dados defensor
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Defensor:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.width(80.dp))
-                Row {
-                    defenderDice.forEach { dice ->
-                        DiceIcon(value = dice, color = Color(0xFF1976D2)) // Azul
-                    }
-                    // Rellenar espacios si hay menos de 2 dados
-                    for (i in defenderDice.size until 2) {
-                        EmptyDiceIcon()
-                    }
-                }
+            DiceRow(
+                label = "Defensor",
+                dice = defenderDice,
+                losses = defenderLosses,
+                maxDice = 2,
+                color = Color(0xFF1976D2) // Azul
+            )
+        }
+    }
+}
+
+@Composable
+fun DiceRow(
+    label: String,
+    dice: List<Int>,
+    losses: Int,
+    maxDice: Int,
+    color: Color
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text("$label:",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.width(80.dp))
+        Row {
+            dice.sortedDescending().forEachIndexed { index, value ->
+                val isWinner = index >= losses
+                DiceIcon(
+                    value = value,
+                    color = color,
+                    isWinner = isWinner
+                )
+            }
+            // Rellenar espacios vacíos
+            for (i in dice.size until maxDice) {
+                EmptyDiceIcon()
             }
         }
     }
 }
 
 @Composable
-fun DiceIcon(value: Int, color: Color) {
+fun DiceIcon(value: Int, color: Color, isWinner: Boolean) {
+    val diceColor = if (isWinner) Color(0xFF388E3C) else color // Verde si gana, color original si pierde
     Box(
         modifier = Modifier
             .size(40.dp)
             .padding(4.dp)
             .background(
-                color.copy(alpha = 0.1f),
+                diceColor.copy(alpha = 0.1f),
                 MaterialTheme.shapes.medium
             )
             .border(
                 width = 1.dp,
-                color = color.copy(alpha = 0.3f),
+                color = diceColor,
                 shape = MaterialTheme.shapes.medium
             ),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = value.toString(),
-            color = color,
+            color = diceColor,
             style = MaterialTheme.typography.titleLarge
         )
     }

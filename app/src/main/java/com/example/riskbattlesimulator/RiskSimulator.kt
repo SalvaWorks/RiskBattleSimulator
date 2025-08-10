@@ -1,6 +1,7 @@
 package com.example.riskbattlesimulator
 
-import com.example.riskbattlesimulator.ui.theme.BattleResult
+import com.example.riskbattlesimulator.ui.BattleResult
+import com.example.riskbattlesimulator.ui.BattleRound
 import kotlin.random.Random
 
 class RiskSimulator {
@@ -11,34 +12,50 @@ class RiskSimulator {
     ): BattleResult {
         var attacker = initialAttacker
         var defender = initialDefender
-        val attackerDice = mutableListOf<Int>()
-        val defenderDice = mutableListOf<Int>()
+        val rounds = mutableListOf<BattleRound>()
 
         while (attacker > stopAt && defender > 0) {
-            // Lanzar dados
             val attDice = rollDice(minOf(3, attacker - 1)).sortedDescending()
             val defDice = rollDice(minOf(2, defender)).sortedDescending()
 
-            attackerDice.addAll(attDice)
-            defenderDice.addAll(defDice)
+            val (attLosses, defLosses) = compareDice(attDice, defDice)
 
-            // Comparar dados
-            val pairs = minOf(attDice.size, defDice.size)
-            for (i in 0 until pairs) {
-                if (attDice[i] > defDice[i]) {
-                    defender--
-                } else {
-                    attacker--
-                }
-            }
+            rounds.add(BattleRound(
+                attackerDice = attDice,
+                defenderDice = defDice,
+                attackerLosses = attLosses,
+                defenderLosses = defLosses
+            ))
+
+            attacker -= attLosses
+            defender -= defLosses
         }
 
         return BattleResult(
             remainingAttacker = attacker,
             remainingDefender = defender,
-            attackerDice = attackerDice,
-            defenderDice = defenderDice
+            rounds = rounds
         )
+    }
+
+    private fun compareDice(
+        attDice: List<Int>,
+        defDice: List<Int>
+    ): Pair<Int, Int> {
+        var attLosses = 0
+        var defLosses = 0
+
+        val pairs = minOf(attDice.size, defDice.size)
+        for (i in 0 until pairs) {
+            if (attDice[i] > defDice[i]) {
+                defLosses++
+            } else {
+                // Defensor gana en empates
+                attLosses++
+            }
+        }
+
+        return Pair(attLosses, defLosses)
     }
 
     private fun rollDice(count: Int): List<Int> {
