@@ -34,11 +34,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.riskbattlesimulator.ui.BattleResult
 import com.example.riskbattlesimulator.ui.BattleRound
@@ -125,8 +129,21 @@ fun InputScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Risk Battle Simulator", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            "Risk Battle Simulator",
+            style = MaterialTheme.typography.displaySmall.copy(
+                fontWeight = FontWeight.Bold,
+                shadow = Shadow(
+                    color = Color.Black.copy(alpha = 0.2f),
+                    offset = Offset(2f, 2f),
+                    blurRadius = 4f
+                ),
+                textAlign = TextAlign.Center
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+        )
 
         NumberInputField(
             value = attackerTroops,
@@ -151,9 +168,11 @@ fun InputScreen(
 
         Button(
             onClick = onSimulate,
-            modifier = Modifier.width(200.dp)
+            modifier = Modifier
+                .width(200.dp)
+                .height(50.dp)
         ) {
-            Text("Simular Batalla")
+            Text("Simular Batalla", style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -214,18 +233,47 @@ fun BattleResultView(result: BattleResult) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Resultado final:", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            "Resultado final:",
+            style = MaterialTheme.typography.displaySmall.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            textAlign = TextAlign.Center
+        )
+
         Text(
             "Atacante: ${result.remainingAttacker} tropas",
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFFD32F2F)
+            )
         )
+
         Text(
             "Defensor: ${result.remainingDefender} tropas",
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1976D2)
+            )
         )
+
         Spacer(modifier = Modifier.height(24.dp))
-        Text("Detalle por rondas:", style = MaterialTheme.typography.titleMedium)
+
+        Text(
+            "Detalle por rondas:",
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 16.dp),
+            textAlign = TextAlign.Center
+        )
 
         Column(
             modifier = Modifier
@@ -255,14 +303,19 @@ fun BattleRoundCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 "Ronda $roundNumber",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 8.dp)
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                textAlign = TextAlign.Center
             )
 
             // Dados atacante
@@ -273,7 +326,7 @@ fun BattleRoundCard(
                 maxDice = 3,
                 baseColor = Color(0xFFD32F2F) // Rojo
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Dados defensor
             DiceRow(
@@ -284,17 +337,38 @@ fun BattleRoundCard(
                 baseColor = Color(0xFF1976D2) // Azul
             )
 
-            // Pérdidas en la ronda
+            // Pérdidas en la ronda - VERSIÓN MEJORADA
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Atacante pierde: ${round.attackerLosses}",
-                    color = Color(0xFFD32F2F))
-                Text("Defensor pierde: ${round.defenderLosses}",
-                    color = Color(0xFF1976D2))
+                // Contenedor para alinear texto atacante
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        "Atacante pierde: ${round.attackerLosses}",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color(0xFFD32F2F),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Contenedor para alinear texto defensor
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Text(
+                        "Defensor pierde: ${round.defenderLosses}",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color(0xFF1976D2),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
@@ -311,8 +385,11 @@ fun DiceRow(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             "$label:",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.width(80.dp)
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = baseColor
+            ),
+            modifier = Modifier.width(100.dp)
         )
         Row {
             dice.forEachIndexed { index, value ->
@@ -322,12 +399,12 @@ fun DiceRow(
                     color = baseColor,
                     outcome = outcome
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(8.dp))
             }
             // Rellenar espacios vacíos
             for (i in dice.size until maxDice) {
                 EmptyDiceIcon()
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(8.dp))
             }
         }
     }
@@ -354,27 +431,22 @@ fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
 
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(56.dp) // Tamaño aumentado para bordes más gruesos
             .padding(4.dp)
-            .background(
-                Color.Transparent, // Fondo transparente
-                MaterialTheme.shapes.medium
-            ),
+            .background(Color.Transparent),
         contentAlignment = Alignment.Center
     ) {
-        // Imagen del dado sin filtro de color
         Image(
             painter = painterResource(id = imageRes),
             contentDescription = "Dado $value",
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier.size(48.dp) // Imagen más grande
         )
 
-        // Fondo de color solo como borde
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .border(
-                    width = 2.dp,
+                    width = 3.dp, // Borde más grueso (3dp)
                     color = displayColor,
                     shape = MaterialTheme.shapes.medium
                 )
@@ -386,27 +458,23 @@ fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
 fun EmptyDiceIcon() {
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(56.dp) // Tamaño consistente con DiceIcon
             .padding(4.dp)
-            .background(
-                Color.Transparent,
-                MaterialTheme.shapes.medium
-            ),
+            .background(Color.Transparent),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(id = R.drawable.dice_empty),
             contentDescription = "Dado vacío",
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(48.dp),
             colorFilter = ColorFilter.tint(Color.LightGray.copy(alpha = 0.5f))
         )
 
-        // Borde gris para el dado vacío
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .border(
-                    width = 1.dp,
+                    width = 3.dp, // Borde más grueso (3dp)
                     color = Color.LightGray.copy(alpha = 0.3f),
                     shape = MaterialTheme.shapes.medium
                 )
