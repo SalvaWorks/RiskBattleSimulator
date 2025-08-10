@@ -93,7 +93,7 @@ fun RiskSimulatorScreen() {
             onValueChange = { stopAtTroops = it },
             label = "Plantar al llegar a"
         )
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
@@ -110,7 +110,7 @@ fun RiskSimulatorScreen() {
             Text("Simular Batalla")
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         result?.let { battleResult ->
             BattleResultView(battleResult)
