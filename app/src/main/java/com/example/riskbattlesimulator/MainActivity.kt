@@ -43,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.riskbattlesimulator.ui.BattleResult
 import com.example.riskbattlesimulator.ui.BattleRound
@@ -391,34 +392,43 @@ fun DiceRow(
             ),
             modifier = Modifier.width(100.dp)
         )
-        Row {
+
+        // Definir el tamaño primero
+        val diceSize = if (maxDice == 3) 40.dp else 48.dp
+
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
             dice.forEachIndexed { index, value ->
-                val outcome = outcomes.getOrNull(index)
                 DiceIcon(
                     value = value,
                     color = baseColor,
-                    outcome = outcome
+                    outcome = outcomes.getOrNull(index),
+                    size = diceSize
                 )
-                Spacer(modifier = Modifier.width(8.dp))
             }
             // Rellenar espacios vacíos
             for (i in dice.size until maxDice) {
-                EmptyDiceIcon()
-                Spacer(modifier = Modifier.width(8.dp))
+                EmptyDiceIcon(size = diceSize)
             }
         }
     }
 }
 
 @Composable
-fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
+fun DiceIcon(
+    value: Int,
+    color: Color,
+    outcome: Boolean?,
+    size: Dp
+) {
     val displayColor = when (outcome) {
         true -> Color(0xFFD32F2F) // Rojo: perdió
         false -> Color(0xFF388E3C) // Verde: ganó
-        null -> color.copy(alpha = 0.5f) // Color base con transparencia: no participó
+        null -> color.copy(alpha = 0.5f) // Color base con transparencia
     }
 
-    // Obtener el recurso de imagen correspondiente al valor del dado
     val imageRes = when (value) {
         1 -> R.drawable.dice_1
         2 -> R.drawable.dice_2
@@ -426,27 +436,26 @@ fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
         4 -> R.drawable.dice_4
         5 -> R.drawable.dice_5
         6 -> R.drawable.dice_6
-        else -> R.drawable.dice_1 // Por defecto
+        else -> R.drawable.dice_1
     }
 
     Box(
         modifier = Modifier
-            .size(56.dp) // Tamaño aumentado para bordes más gruesos
             .padding(4.dp)
-            .background(Color.Transparent),
+            .size(size),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(id = imageRes),
             contentDescription = "Dado $value",
-            modifier = Modifier.size(48.dp) // Imagen más grande
+            modifier = Modifier.size(size * 0.85f)
         )
 
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .border(
-                    width = 3.dp, // Borde más grueso (3dp)
+                    width = 2.dp,
                     color = displayColor,
                     shape = MaterialTheme.shapes.medium
                 )
@@ -455,18 +464,17 @@ fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
 }
 
 @Composable
-fun EmptyDiceIcon() {
+fun EmptyDiceIcon(size: Dp) {
     Box(
         modifier = Modifier
-            .size(56.dp) // Tamaño consistente con DiceIcon
             .padding(4.dp)
-            .background(Color.Transparent),
+            .size(size),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(id = R.drawable.dice_empty),
             contentDescription = "Dado vacío",
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(size * 0.85f),
             colorFilter = ColorFilter.tint(Color.LightGray.copy(alpha = 0.5f))
         )
 
@@ -474,7 +482,7 @@ fun EmptyDiceIcon() {
             modifier = Modifier
                 .matchParentSize()
                 .border(
-                    width = 3.dp, // Borde más grueso (3dp)
+                    width = 2.dp,
                     color = Color.LightGray.copy(alpha = 0.3f),
                     shape = MaterialTheme.shapes.medium
                 )
