@@ -117,7 +117,7 @@ fun NumberInputField(value: String, onValueChange: (String) -> Unit, label: Stri
 fun BattleResultView(result: BattleResult) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -130,10 +130,11 @@ fun BattleResultView(result: BattleResult) {
         Spacer(modifier = Modifier.height(24.dp))
         Text("Detalle por rondas:", style = MaterialTheme.typography.titleMedium)
 
+        // Contenedor desplazable con peso (weight) para ocupar espacio disponible
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .heightIn(max = 400.dp)
+                .weight(1f)
                 .padding(vertical = 8.dp)
         ) {
             result.rounds.forEachIndexed { index, round ->
