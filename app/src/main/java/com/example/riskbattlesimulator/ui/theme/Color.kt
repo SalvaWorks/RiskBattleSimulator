@@ -1,4 +1,4 @@
-package com.riskbattlesimulator.ui.theme
+package com.example.riskbattlesimulator.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

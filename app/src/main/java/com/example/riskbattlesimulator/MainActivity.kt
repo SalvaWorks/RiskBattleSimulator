@@ -3,6 +3,7 @@ package com.example.riskbattlesimulator
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.riskbattlesimulator.ui.BattleResult
@@ -247,19 +250,20 @@ fun BattleRoundCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth(0.9f)
+            .fillMaxWidth(0.95f)
             .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 "Ronda $roundNumber",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
-            Spacer(modifier = Modifier.height(12.dp))
 
             // Dados atacante
             DiceRow(
@@ -269,7 +273,7 @@ fun BattleRoundCard(
                 maxDice = 3,
                 baseColor = Color(0xFFD32F2F) // Rojo
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // Dados defensor
             DiceRow(
@@ -279,6 +283,19 @@ fun BattleRoundCard(
                 maxDice = 2,
                 baseColor = Color(0xFF1976D2) // Azul
             )
+
+            // Pérdidas en la ronda
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Text("Atacante pierde: ${round.attackerLosses}",
+                    color = Color(0xFFD32F2F))
+                Text("Defensor pierde: ${round.defenderLosses}",
+                    color = Color(0xFF1976D2))
+            }
         }
     }
 }
@@ -305,10 +322,12 @@ fun DiceRow(
                     color = baseColor,
                     outcome = outcome
                 )
+                Spacer(modifier = Modifier.width(4.dp))
             }
             // Rellenar espacios vacíos
             for (i in dice.size until maxDice) {
                 EmptyDiceIcon()
+                Spacer(modifier = Modifier.width(4.dp))
             }
         }
     }
@@ -322,25 +341,43 @@ fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
         null -> color.copy(alpha = 0.5f) // Color base con transparencia: no participó
     }
 
+    // Obtener el recurso de imagen correspondiente al valor del dado
+    val imageRes = when (value) {
+        1 -> R.drawable.dice_1
+        2 -> R.drawable.dice_2
+        3 -> R.drawable.dice_3
+        4 -> R.drawable.dice_4
+        5 -> R.drawable.dice_5
+        6 -> R.drawable.dice_6
+        else -> R.drawable.dice_1 // Por defecto
+    }
+
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(48.dp)
             .padding(4.dp)
             .background(
-                displayColor.copy(alpha = 0.1f),
+                Color.Transparent, // Fondo transparente
                 MaterialTheme.shapes.medium
-            )
-            .border(
-                width = 1.dp,
-                color = displayColor,
-                shape = MaterialTheme.shapes.medium
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = value.toString(),
-            color = displayColor,
-            style = MaterialTheme.typography.titleLarge
+        // Imagen del dado sin filtro de color
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = "Dado $value",
+            modifier = Modifier.size(40.dp)
+        )
+
+        // Fondo de color solo como borde
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .border(
+                    width = 2.dp,
+                    color = displayColor,
+                    shape = MaterialTheme.shapes.medium
+                )
         )
     }
 }
@@ -349,23 +386,30 @@ fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
 fun EmptyDiceIcon() {
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(48.dp)
             .padding(4.dp)
             .background(
-                Color.LightGray.copy(alpha = 0.1f),
+                Color.Transparent,
                 MaterialTheme.shapes.medium
-            )
-            .border(
-                width = 1.dp,
-                color = Color.LightGray.copy(alpha = 0.3f),
-                shape = MaterialTheme.shapes.medium
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "-",
-            color = Color.LightGray,
-            style = MaterialTheme.typography.bodyLarge
+        Image(
+            painter = painterResource(id = R.drawable.dice_empty),
+            contentDescription = "Dado vacío",
+            modifier = Modifier.size(40.dp),
+            colorFilter = ColorFilter.tint(Color.LightGray.copy(alpha = 0.5f))
+        )
+
+        // Borde gris para el dado vacío
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .border(
+                    width = 1.dp,
+                    color = Color.LightGray.copy(alpha = 0.3f),
+                    shape = MaterialTheme.shapes.medium
+                )
         )
     }
 }

@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.riskbattlesimulator"
+    namespace = "com.example.riskbattlesimulator"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.riskbattlesimulator"
+        applicationId = "com.example.riskbattlesimulator"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
