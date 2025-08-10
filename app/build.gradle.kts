@@ -42,6 +42,10 @@ android {
 }
 
 dependencies {
+    // Para landscape horizontal
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
+
     // Compose BOM para mantener versiones sincronizadas
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
 
