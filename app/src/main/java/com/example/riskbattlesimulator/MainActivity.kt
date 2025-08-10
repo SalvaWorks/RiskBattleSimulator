@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.riskbattlesimulator.ui.BattleResult
@@ -56,14 +57,64 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Estado para controlar las vistas
+enum class AppScreen {
+    INPUT, RESULTS
+}
+
 @Composable
 fun RiskSimulatorScreen() {
-    var attackerTroops by remember { mutableStateOf("10") } // Valor por defecto para pruebas
-    var defenderTroops by remember { mutableStateOf("6") } // Valor por defecto para pruebas
+    var currentScreen by remember { mutableStateOf(AppScreen.INPUT) }
+    var battleResult by remember { mutableStateOf<BattleResult?>(null) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    var attackerTroops by remember { mutableStateOf("10") }
+    var defenderTroops by remember { mutableStateOf("6") }
     var stopAtTroops by remember { mutableStateOf("1") }
 
-    var result by remember { mutableStateOf<BattleResult?>(null) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (currentScreen) {
+            AppScreen.INPUT -> {
+                InputScreen(
+                    attackerTroops = attackerTroops,
+                    defenderTroops = defenderTroops,
+                    stopAtTroops = stopAtTroops,
+                    onAttackerChange = { attackerTroops = it },
+                    onDefenderChange = { defenderTroops = it },
+                    onStopAtChange = { stopAtTroops = it },
+                    onSimulate = {
+                        keyboardController?.hide()
+                        val attacker = attackerTroops.toIntOrNull() ?: 0
+                        val defender = defenderTroops.toIntOrNull() ?: 0
+                        val stopAt = stopAtTroops.toIntOrNull() ?: 1
 
+                        if (attacker > 1 && defender > 0) {
+                            battleResult = RiskSimulator().simulateBattle(attacker, defender, stopAt)
+                            currentScreen = AppScreen.RESULTS
+                        }
+                    }
+                )
+            }
+            AppScreen.RESULTS -> {
+                ResultsScreen(
+                    battleResult = battleResult,
+                    onBack = { currentScreen = AppScreen.INPUT }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun InputScreen(
+    attackerTroops: String,
+    defenderTroops: String,
+    stopAtTroops: String,
+    onAttackerChange: (String) -> Unit,
+    onDefenderChange: (String) -> Unit,
+    onStopAtChange: (String) -> Unit,
+    onSimulate: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,44 +127,62 @@ fun RiskSimulatorScreen() {
 
         NumberInputField(
             value = attackerTroops,
-            onValueChange = { attackerTroops = it },
+            onValueChange = onAttackerChange,
             label = "Tropas atacantes"
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         NumberInputField(
             value = defenderTroops,
-            onValueChange = { defenderTroops = it },
+            onValueChange = onDefenderChange,
             label = "Tropas defensoras"
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         NumberInputField(
             value = stopAtTroops,
-            onValueChange = { stopAtTroops = it },
+            onValueChange = onStopAtChange,
             label = "Plantar al llegar a"
         )
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(
-            onClick = {
-                val attacker = attackerTroops.toIntOrNull() ?: 0
-                val defender = defenderTroops.toIntOrNull() ?: 0
-                val stopAt = stopAtTroops.toIntOrNull() ?: 1
-
-                if (attacker > 1 && defender > 0) {
-                    result = RiskSimulator().simulateBattle(attacker, defender, stopAt)
-                }
-            },
+            onClick = onSimulate,
             modifier = Modifier.width(200.dp)
         ) {
             Text("Simular Batalla")
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(20.dp))
+@Composable
+fun ResultsScreen(
+    battleResult: BattleResult?,
+    onBack: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Botón para volver atrás (esquina superior derecha)
+        Button(
+            onClick = onBack,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+        ) {
+            Text("Volver")
+        }
 
-        result?.let { battleResult ->
-            BattleResultView(battleResult)
+        // Contenido de resultados
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 60.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            battleResult?.let {
+                BattleResultView(battleResult)
+            } ?: run {
+                Text("No hay resultados disponibles", style = MaterialTheme.typography.bodyLarge)
+            }
         }
     }
 }
@@ -249,7 +318,7 @@ fun DiceRow(
 fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
     val displayColor = when (outcome) {
         true -> Color(0xFFD32F2F) // Rojo: perdió
-        false -> Color(0xFF388E3C) //
+        false -> Color(0xFF388E3C) // Verde: ganó
         null -> color.copy(alpha = 0.5f) // Color base con transparencia: no participó
     }
 
