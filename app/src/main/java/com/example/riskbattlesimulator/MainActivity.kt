@@ -93,7 +93,7 @@ fun RiskSimulatorScreen() {
             onValueChange = { stopAtTroops = it },
             label = "Plantar al llegar a"
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = {
@@ -110,7 +110,7 @@ fun RiskSimulatorScreen() {
             Text("Simular Batalla")
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         result?.let { battleResult ->
             BattleResultView(battleResult)
@@ -249,7 +249,7 @@ fun DiceRow(
 fun DiceIcon(value: Int, color: Color, outcome: Boolean?) {
     val displayColor = when (outcome) {
         true -> Color(0xFFD32F2F) // Rojo: perdió
-        false -> Color(0xFF388E3C) // Verde: ganó
+        false -> Color(0xFF388E3C) //
         null -> color.copy(alpha = 0.5f) // Color base con transparencia: no participó
     }
 
